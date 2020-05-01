@@ -51,10 +51,6 @@ class Sudoku():
             return True
         return False
 
-    @classmethod
-    def neighborhood(cell):
-        pass
-
 
 class Sentence():
     """
@@ -66,20 +62,29 @@ class Sentence():
         self.cells = set(cells)
         self.values = set(values)
 
+    def __repr__(self):
+        return f"Sentence({self.cells}, {self.values})"
+
     def __eq__(self, other):
-        return self.cells == other.cells and self.values == other.values
+        if isinstance(other, Sentence):
+            return self.cells == other.cells and self.values == other.values
+        else:
+            return False
 
     def __hash__(self):
-        return hash((tuple(self.cells), tuple(self.values)))
+        return hash(self.__repr__())
 
     def __str__(self):
         return f"{self.cells} <> {self.values}"
+
+    def size(self):
+        return (len(self.cells), len(self.values))
 
     def conclusive(self):
         """
         Test if a sentence can assign the value of a cell
         """
-        if len(self.cells) == 1 and len(self.values == 1):
+        if len(self.cells) == 1 and len(self.values) == 1:
             return True
 
     def remove_assigned(self, cell, value):
@@ -103,7 +108,12 @@ class SudokuAI():
         self.assigned = {}
         self.init_knowledge()
 
+    def print_puzzle(self):
+        for row in self.puzzle:
+            print(" ".join([str(cell) if cell != 0 else ' ' for cell in row]))
+
     def init_knowledge(self):
+        # logical sentences from row + column clauses
         for i in range(9):
             row_cells = set()
             col_cells = set()
@@ -114,8 +124,8 @@ class SudokuAI():
             col_s = Sentence(col_cells, {i for i in range(1, 10)})
             self.knowledge.add(row_s)
             self.knowledge.add(col_s)
-        # TODO:
-        # add box knowledge
+
+        # logical sentences from box clause
         for i in [0, 3, 6]:
             for j in [0, 3, 6]:
                 cells = set()
@@ -125,22 +135,54 @@ class SudokuAI():
                 s = Sentence(cells, {i for i in range(1, 10)})
                 self.knowledge.add(s)
 
+        # add cells known at beginning to knowledge
         for i, row in enumerate(self.puzzle):
             for j, val in enumerate(row):
                 cell = (i, j)
                 if self.game.assigned(cell):
                     self.assigned[cell] = val
-                    s = Sentence(cell, [val])
+                    s = Sentence([cell], [val])
                     self.knowledge.add(s)
 
-    def infer(self, cell, values):
+    def infer(self):
         """
-        Perform one round of:
-        infer sentences based on puzzles
+        Perform all possible inference steps
         """
+        updated = True
+        while updated:
+            updated = False
+
+            for sentence in self.knowledge:
+                if sentence.conclusive():
+                    cell = list(sentence.cells)[0]
+                    value = list(sentence.values)[0]
+                    self.assigned[cell] = value
+                    updated = True
+
+            for cell in self.assigned:
+                for s in self.knowledge:
+                    s.remove_assigned(cell, self.assigned[cell])
+
+            for s1, s2 in list(itertools.combinations(self.knowledge, 2)):
+                # subset
+                if s1.cells and s1 != s2 and s1.cells.issubset(s2.cells):
+                    s = Sentence(s2.cells - s1.cells, s2.values - s1.values)
+                    if s not in self.knowledge:
+                        self.knowledge.add(s)
+                        updated = True
+                # intersection
+                if s1.cells and s1 != s2 and s1.cells.intersection(s2.cells):
+                    cells = s1.cells.union(s2.cells)
+                    values = s1.values.union(s2.values)
+                    sa = Sentence(cells - s1.cells, values - s1.values)
+                    sb = Sentence(cells - s2.cells, values - s2.values)
+                    if sa not in self.knowledge:
+                        self.knowledge.add(sa)
+                        updated = True
+                    if sb not in self.knowledge:
+                        self.knowledge.add(sb)
+                        updated = True
+
         for cell in self.assigned:
-            for s in self.knowledge:
-                s.remove_assigned(cell, self.assigned[cell])
-        # TODO:
-        # subtract subsets
-        for s1, s2 in itertools.
+            i, j = cell
+            self.puzzle[i][j] = self.assigned[cell]

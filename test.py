@@ -24,15 +24,13 @@ puzzle = [
          [8, 3, 1, 0, 5, 0, 2, 6, 7]
 ]
 
-
+# export = ""
+# for row in puzzle:
+#     export += " ".join(str(i) for i in row) + " "
+# print(export)
 game = Sudoku(solution=board, puzzle=puzzle)
 ai = SudokuAI(game)
 game.print_puzzle()
-
-for i in [0, 3, 6]:
-    for j in [0, 3, 6]:
-        cells = set()
-        for k in range(3):
-            for v in range(3):
-                cells.add((i+k, j+v))
-        print(cells)
+ai.infer()
+print("-")
+ai.print_puzzle()
