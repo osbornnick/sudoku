@@ -1,7 +1,5 @@
 import itertools
-
-
-
+from sudoku import Sudoku
 
 
 class Sentence():
@@ -93,6 +91,7 @@ class SudokuAI():
     def solve(self):
         """
         Perform all possible inference steps
+        ... it doesnt work
         """
         while not self.game.complete():
             for sentence in self.knowledge:
@@ -113,17 +112,17 @@ class SudokuAI():
                     if s not in self.knowledge:
                         self.knowledge.append(s)
                 # intersection
-                # if s1.cells and s1 != s2 and s1.cells.intersection(s2.cells):
-                #     cells = s1.cells.union(s2.cells)
-                #     values = s1.values + s2.values
-                #     val1 = [val for val in values if val not in s1.values]
-                #     val2 = [val for val in values if val not in s2.values]
-                #     sa = Sentence(cells - s1.cells, val1)
-                #     sb = Sentence(cells - s2.cells, val2)
-                #     if sa not in self.knowledge:
-                #         self.knowledge.append(sa)
-                #     if sb not in self.knowledge:
-                #         self.knowledge.append(sb)
+                if s1.cells and s1 != s2 and s1.cells.intersection(s2.cells):
+                    cells = s1.cells.union(s2.cells)
+                    values = s1.values + s2.values
+                    val1 = [val for val in values if val not in s1.values]
+                    val2 = [val for val in values if val not in s2.values]
+                    sa = Sentence(cells - s1.cells, val1)
+                    sb = Sentence(cells - s2.cells, val2)
+                    if sa not in self.knowledge:
+                        self.knowledge.append(sa)
+                    if sb not in self.knowledge:
+                        self.knowledge.append(sb)
 
             for cell in self.assigned:
                 i, j = cell
