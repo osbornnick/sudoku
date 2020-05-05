@@ -106,20 +106,27 @@ class SudokuAI():
         """
         Make a round of inferences based on current knowledge
         """
+        updated = False
         for s1, s2 in permutations(self.knowledge, 2):
             if s1.peer(s2):
                 s3 = s1 - s2
                 self.knowledge.append(s3)
+                updated = True
+
+        self.clean_knowledge()
 
         for s1 in self.knowledge:
             if s1.conclusive():
                 i, j = list(s1.boxes)[0]
-                self.game.puzzle[i][j] = list(s1.values)[0]
+                if not self.game.puzzle[i][j]:
+                    self.game.puzzle[i][j] = list(s1.values)[0]
                 for s2 in self.knowledge:
                     if s1.peer(s2) and s1 != s2:
                         s2.remove_assigned(s1)
+                        updated = True
 
-        self.clean_knowledge()
+        if not updated:
+            print("no updates made to knowledge")
 
     def clean_knowledge(self):
         self.knowledge = list(set(self.knowledge))

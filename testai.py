@@ -11,7 +11,8 @@ for sol, puz in zip(solutions[1:2], puzzles[1:2]):
     game.print_puzzle()
     ai = SudokuAI(game)
     ai.axioms()
-    for _ in range(10):
+    for i in range(10):
+        print(f"Step: {i}")
         ai.infer()
         print(f"progress: {game.progress()}")
         print(len(ai.knowledge))
