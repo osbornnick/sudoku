@@ -2,6 +2,7 @@ class Sudoku():
     """
     Sudoku game representation
     """
+
     def __init__(self, solution, puzzle):
         self.height = 9
         self.width = 9
@@ -21,6 +22,7 @@ class Sudoku():
             print(" ".join([str(cell) for cell in row]))
 
     def print_puzzle(self):
+        print("Puzzle -")
         for row in self.puzzle:
             print(" ".join([str(cell) if cell != 0 else ' ' for cell in row]))
 

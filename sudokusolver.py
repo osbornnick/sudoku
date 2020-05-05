@@ -1,6 +1,4 @@
 from sudoku import Sudoku
-import random
-from collections import defaultdict
 import time
 
 
@@ -9,6 +7,7 @@ class SudokuSolver():
     Defines a Sudoku Solver, to solve a Sudoku game
     via a brute force backtracking method
     """
+
     def __init__(self, sudoku):
         self.sudoku = sudoku
         self.assignment = self.sudoku.puzzle

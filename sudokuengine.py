@@ -1,5 +1,5 @@
-from sudoku import Sudoku
 from itertools import permutations
+from sudoku import Sudoku
 
 
 class Sentence():
@@ -7,6 +7,7 @@ class Sentence():
     A Sentence to build the knowledge base
     for a Sudoku solving knowledge based agent
     """
+
     def __init__(self, boxes, values):
         self.boxes = set(boxes)
         self.values = list(values)
@@ -58,6 +59,12 @@ class Sentence():
             return True
         return False
 
+    def remove_assigned(self, other):
+        self.boxes = self.boxes - other.boxes
+        for i in other.values:
+            if i in self.values:
+                self.values.remove(i)
+
 
 class SudokuAI():
     def __init__(self, game):
@@ -66,14 +73,15 @@ class SudokuAI():
 
     def axioms(self):
         # logical sentences from row + column clauses
+        allvals = [i for i in range(1, 10)]
         for i in range(9):
             row_cells = set()
             col_cells = set()
             for j in range(9):
                 row_cells.add((i, j))
                 col_cells.add((j, i))
-            row_s = Sentence(row_cells, [i for i in range(1, 10)])
-            col_s = Sentence(col_cells, [i for i in range(1, 10)])
+            row_s = Sentence(row_cells, allvals)
+            col_s = Sentence(col_cells, allvals)
             self.knowledge.append(row_s)
             self.knowledge.append(col_s)
 
@@ -84,7 +92,7 @@ class SudokuAI():
                 for k in range(3):
                     for v in range(3):
                         cells.add((i+k, j+v))
-                s = Sentence(cells, [i for i in range(1, 10)])
+                s = Sentence(cells, allvals)
                 self.knowledge.append(s)
 
         # add cells known at beginning to knowledge
@@ -98,17 +106,23 @@ class SudokuAI():
         """
         Make a round of inferences based on current knowledge
         """
-        for s1, s2 in permutations(self.knowledge, 2):
-            if s1.peer(s2):
-                s3 = s1 - s2
-                self.knowledge.append(s3)
+        # TODO: implement better logic
+        # take only differences where cell + value overlap same amount
+
+        # for s1, s2 in permutations(self.knowledge, 2):
+        #     if s1.peer(s2):
+        #         s3 = s1 - s2
+        #         self.knowledge.append(s3)
+
+        for s1 in self.knowledge:
+            if s1.conclusive():
+                i, j = list(s1.boxes)[0]
+                self.game.puzzle[i][j] = s1.values[0]
+                for s2 in self.knowledge:
+                    if s1.peer(s2) and s1 != s2:
+                        s2.remove_assigned(s1)
 
         self.clean_knowledge()
-
-        for sentence in self.knowledge:
-            if sentence.conclusive():
-                i, j = list(sentence.boxes)[0]
-                self.game.puzzle[i][j] = sentence.values[0]
 
     def clean_knowledge(self):
         self.knowledge = list(set(self.knowledge))
@@ -121,5 +135,4 @@ class SudokuAI():
         self.axioms()
         while not self.game.complete():
             self.infer()
-            self.game.print_puzzle()
-            print(len(self.knowledge))
+        self.game.print_puzzle()
