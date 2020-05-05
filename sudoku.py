@@ -31,6 +31,10 @@ class Sudoku():
             return True
         return False
 
+    def progress(self):
+        flat = [val for row in self.puzzle for val in row]
+        return 81 - flat.count('0')
+
     def turn(self):
         row = int(input("Choose a row (0-8)> "))
         col = int(input("Choose a column (0-8)> "))
@@ -58,7 +62,5 @@ class Sudoku():
 
     @classmethod
     def grid_to_string(self, grid):
-        out = ""
-        for row in grid:
-            out += " ".join(str(i) for i in row) + " "
-        return out[:-1]
+        flat = [str(val) for row in grid for val in row]
+        return "".join(flat)
