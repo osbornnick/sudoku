@@ -19,6 +19,6 @@ for sol, puz in zip(solutions[1:2], puzzles[1:2]):
         game.print_puzzle()
     ai.clean_knowledge()
     for s in ai.knowledge:
-        if (2, 1) in s.boxes:
+        if (3, 4) in s.boxes:
             print(s)
     print(game.grid_to_string(game.puzzle))
