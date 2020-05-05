@@ -39,10 +39,15 @@ class Sentence():
         boxes = self.boxes - other.boxes
         return Sentence(boxes, vals)
 
+    def remove_assigned(self, other):
+        self.boxes -= other.boxes
+        self.values -= other.values
+
     def peer(self, other):
         """
         return True if self and other are peers otehrwise false
         they are peers if we can infer a new sentence from their overlap
+        len of box overlap and value overlap must match
         """
         if not isinstance(other, Sentence):
             raise ValueError(f"{other.__repr__()} is not a Sentence")
@@ -60,12 +65,6 @@ class Sentence():
             return True
         return False
 
-    def remove_assigned(self, other):
-        self.boxes = self.boxes - other.boxes
-        for i in other.values:
-            if i in self.values:
-                self.values.remove(i)
-
 
 class SudokuAI():
     def __init__(self, game):
@@ -74,7 +73,7 @@ class SudokuAI():
 
     def axioms(self):
         # logical sentences from row + column clauses
-        allvals = [i for i in range(1, 10)]
+        allvals = {i for i in range(1, 10)}
         for i in range(9):
             row_cells = set()
             col_cells = set()
@@ -101,24 +100,21 @@ class SudokuAI():
             for j, val in enumerate(row):
                 cell = (i, j)
                 if self.game.assigned(cell):
-                    self.knowledge.append(Sentence({cell}, [val]))
+                    self.knowledge.append(Sentence({cell}, {val}))
 
     def infer(self):
         """
         Make a round of inferences based on current knowledge
         """
-        # TODO: implement better logic
-        # take only differences where cell + value overlap same amount
-
-        # for s1, s2 in permutations(self.knowledge, 2):
-        #     if s1.peer(s2):
-        #         s3 = s1 - s2
-        #         self.knowledge.append(s3)
+        for s1, s2 in permutations(self.knowledge, 2):
+            if s1.peer(s2):
+                s3 = s1 - s2
+                self.knowledge.append(s3)
 
         for s1 in self.knowledge:
             if s1.conclusive():
                 i, j = list(s1.boxes)[0]
-                self.game.puzzle[i][j] = s1.values[0]
+                self.game.puzzle[i][j] = list(s1.values)[0]
                 for s2 in self.knowledge:
                     if s1.peer(s2) and s1 != s2:
                         s2.remove_assigned(s1)
