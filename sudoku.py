@@ -33,7 +33,7 @@ class Sudoku():
 
     def progress(self):
         flat = [val for row in self.puzzle for val in row]
-        return 81 - flat.count('0')
+        return 81 - flat.count(0)
 
     def turn(self):
         row = int(input("Choose a row (0-8)> "))

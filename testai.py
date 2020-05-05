@@ -13,6 +13,7 @@ for sol, puz in zip(solutions[1:2], puzzles[1:2]):
     ai.axioms()
     for _ in range(10):
         ai.infer()
+        print(f"progress: {game.progress()}")
         print(len(ai.knowledge))
         game.print_puzzle()
     for s in ai.knowledge:
