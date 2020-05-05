@@ -5,13 +5,12 @@ with open('puzzles.txt', 'r') as f:
     puzzles = data[::2]
     solutions = data[1::2]
 
-for sol, puz in zip(solutions[:1], puzzles[:1]):
+for sol, puz in zip(solutions[1:2], puzzles[1:2]):
     game = Sudoku(solution=sol, puzzle=puz)
     game.print_puzzle()
     ai = SudokuAI(game)
-    ai.solve()
-    # ai.axioms()
-    # ai.infer()
-    # ai.infer()
-    # for s in ai.knowledge:
-    #     print(s)
+    ai.axioms()
+    for _ in range(10):
+        ai.infer()
+    for s in ai.knowledge:
+        print(s)

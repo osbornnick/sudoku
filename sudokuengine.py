@@ -10,7 +10,7 @@ class Sentence():
 
     def __init__(self, boxes, values):
         self.boxes = set(boxes)
-        self.values = list(values)
+        self.values = set(values)
 
     def __repr__(self):
         return f"Sentence{self.boxes, self.values}"
@@ -35,17 +35,18 @@ class Sentence():
         """
         if not isinstance(other, Sentence):
             raise ValueError(f"{other.__repr__()} is not a sentence")
-        vals = self.values.copy()
-        for i in other.values:
-            if i in self.values:
-                vals.remove(i)
+        vals = self.values - other.values
         boxes = self.boxes - other.boxes
         return Sentence(boxes, vals)
 
     def peer(self, other):
+        """
+        return True if self and other are peers otehrwise false
+        they are peers if we can infer a new sentence from their overlap
+        """
         if not isinstance(other, Sentence):
             raise ValueError(f"{other.__repr__()} is not a Sentence")
-        if self.boxes.intersection(other.boxes):
+        if len(self.boxes & other.boxes) == len(self.values & other.values):
             return True
         return False
 
