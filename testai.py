@@ -11,11 +11,14 @@ for sol, puz in zip(solutions[1:2], puzzles[1:2]):
     game.print_puzzle()
     ai = SudokuAI(game)
     ai.axioms()
-    for i in range(10):
+    for i in range(50):
         print(f"Step: {i}")
         ai.infer()
         print(f"progress: {game.progress()}")
         print(len(ai.knowledge))
         game.print_puzzle()
+    ai.clean_knowledge()
     for s in ai.knowledge:
-        print(s)
+        if (2, 1) in s.boxes:
+            print(s)
+    print(game.grid_to_string(game.puzzle))

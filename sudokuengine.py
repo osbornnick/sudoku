@@ -55,6 +55,13 @@ class Sentence():
             return True
         return False
 
+    def neighbor(self, other):
+        if not isinstance(other, Sentence):
+            raise ValueError(f"{other.__repr__()} is not a Sentence")
+        if self.boxes & other.boxes:
+            return True
+        return False
+
     def empty(self):
         if self.boxes and self.values:
             return False
@@ -62,6 +69,11 @@ class Sentence():
 
     def conclusive(self):
         if len(self.boxes) == 1 and len(self.values) == 1:
+            return True
+        return False
+
+    def single(self):
+        if len(self.boxes) == 1 and len(self.values) != 1:
             return True
         return False
 
@@ -101,17 +113,29 @@ class SudokuAI():
                 cell = (i, j)
                 if self.game.assigned(cell):
                     self.knowledge.append(Sentence({cell}, {val}))
+                else:
+                    self.knowledge.append(Sentence({cell}, allvals))
 
     def infer(self):
         """
         Make a round of inferences based on current knowledge
         """
+        # TODO:
+        # Haven't quite captured all of the logic rules that are necessary
         updated = False
         for s1, s2 in permutations(self.knowledge, 2):
             if s1.peer(s2):
                 s3 = s1 - s2
-                self.knowledge.append(s3)
+                if s3 not in self.knowledge:
+                    self.knowledge.append(s3)
                 updated = True
+
+        for s1 in self.knowledge:
+            if s1.single():
+                for s2 in self.knowledge:
+                    if s1.neighbor(s2) and s1 != s2:
+                        s1.values -= s2.values
+                    updated = True
 
         self.clean_knowledge()
 

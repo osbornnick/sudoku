@@ -2,14 +2,14 @@ from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
 sudoku = ".79.8.5.2..8.9.....4.57..38.....8..3463..5....2.4...5..3........543.....6..7....."
 sudoku1 = "379684512518293764246571938795168423463925187821437659137846295954312876682759341"
-sudoku1 = "."*81
 sudoku = sudoku1
 
 
 def draw_sudoku(board_string, board_string2=None):
-    board1 = [char if char != '.' else ' ' for char in board_string]
+    empty = [".", "0"]
+    board1 = [char if char not in empty else ' ' for char in board_string]
     if board_string2:
-        board2 = [char if char != '.' else ' ' for char in board_string2]
+        board2 = [char if char not in empty else ' ' for char in board_string2]
     else:
         board2 = board1
     im = Image.new('RGB', (900, 900), color='white')
