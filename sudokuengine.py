@@ -1,5 +1,6 @@
-from itertools import permutations
+from itertools import combinations
 from sudoku import Sudoku
+from collections import Counter
 
 
 class Sentence():
@@ -23,7 +24,9 @@ class Sentence():
         return False
 
     def __hash__(self):
-        return hash((tuple(self.boxes), tuple(self.values)))
+        a = tuple(sorted(self.boxes))
+        b = tuple(sorted(self.values))
+        return hash((a, b))
 
     def __str__(self):
         return f"{self.boxes} -> {self.values}"
@@ -58,24 +61,19 @@ class Sentence():
     def neighbor(self, other):
         if not isinstance(other, Sentence):
             raise ValueError(f"{other.__repr__()} is not a Sentence")
-        if self.boxes & other.boxes:
-            return True
-        return False
+        return bool(self.boxes.intersection(other.boxes))
 
     def empty(self):
-        if self.boxes and self.values:
-            return False
-        return True
+        return not (self.boxes and self.values)
 
     def conclusive(self):
-        if len(self.boxes) == 1 and len(self.values) == 1:
-            return True
-        return False
+        return (len(self.boxes) == 1) and (len(self.values) == 1)
 
     def single(self):
-        if len(self.boxes) == 1 and len(self.values) != 1:
-            return True
-        return False
+        return (len(self.boxes) == 1)
+
+    def multiple(self):
+        return (len(self.boxes) > 1)
 
 
 class SudokuAI():
@@ -120,25 +118,8 @@ class SudokuAI():
         """
         Make a round of inferences based on current knowledge
         """
-        # TODO:
-        # Haven't quite captured all of the logic rules that are necessary
         updated = False
-        for s1, s2 in permutations(self.knowledge, 2):
-            if s1.peer(s2):
-                s3 = s1 - s2
-                if s3 not in self.knowledge:
-                    self.knowledge.append(s3)
-                updated = True
-
-        for s1 in self.knowledge:
-            if s1.single():
-                for s2 in self.knowledge:
-                    if s1.neighbor(s2) and s1 != s2:
-                        s1.values -= s2.values
-                    updated = True
-
-        self.clean_knowledge()
-
+        # remove assignments
         for s1 in self.knowledge:
             if s1.conclusive():
                 i, j = list(s1.boxes)[0]
@@ -149,8 +130,56 @@ class SudokuAI():
                         s2.remove_assigned(s1)
                         updated = True
 
+        # infer new sentences
+        for s1, s2 in combinations(self.knowledge, 2):
+            if s1.peer(s2):
+                s3 = s1 - s2
+                if s3 not in self.knowledge and not s3.empty():
+                    self.knowledge.append(s3)
+                updated = True
+
+        # update neighbors and find hidden singles
+        new_sentences = set()
+        for s1 in self.knowledge:
+            if s1.single() and not s1.conclusive():
+                for s2 in self.knowledge:
+                    if s1.neighbor(s2):
+                        s1.values = s1.values.intersection(s2.values)
+                    updated = True
+
+        for s1 in self.knowledge:
+            if s1.multiple():
+                components = set()
+                for s2 in self.knowledge:
+                    if s2.single() and s2.boxes.issubset(s1.boxes):
+                        components.add(s2)
+                if components:
+                    cells = {box for s in components for box in s.boxes}
+                if cells == s1.boxes:
+                    new_sents = self.hidden_single(components)
+                    if new_sents:
+                        new_sentences.update(new_sents)
+
+        self.knowledge.extend(list(new_sentences))
+
+        self.clean_knowledge()
+
         if not updated:
             print("no updates made to knowledge")
+
+    def hidden_single(self, sentences):
+        out = set()
+        c = Counter()
+        for s in sentences:
+            c.update(s.values)
+        for val in c:
+            if c[val] == 1:
+                for s1 in sentences:
+                    if val in s1.values:
+                        s2 = Sentence(s1.boxes, {val})
+                        if s2 not in self.knowledge:
+                            out.add(s2)
+        return out
 
     def clean_knowledge(self):
         self.knowledge = list(set(self.knowledge))
